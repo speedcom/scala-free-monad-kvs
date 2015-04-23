@@ -13,3 +13,13 @@ import Free._
 // 5. Write scripts
 // 6. Interpreters
 
+// Fantasy API
+// def put(key: String, value: String): Unit
+// def get(key: String): String
+// def delete(key: String): Unit
+
+// 1. ADT
+trait KVS[Next]
+case class Put[Next](key: String, value: String, next: Next) extends KVS[Next]     // <----  def put(key: String, value: String): Unit
+case class Get[Next](key: String, onResult: String => Next) extends KVS[Next]      // <----  def get(key: String): String
+case class Delete[Next](key: String, next: Next) extends KVS[Next]                 // <----  def delete(key: String): Unit
