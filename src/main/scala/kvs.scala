@@ -39,4 +39,10 @@ object KVS {
   def put(key: String, value: String): Free[KVS, Unit] = liftF(Put(key, value, ()))
   def get(key: String): Free[KVS, String] = liftF(Get(key, identity))
   def delete(key: String): Free[KVS, Unit] = liftF(Delete(key, ()))
+
+  // 4. Composite functions
+  def modify(key: String, f: String => String): Free[KVS, Unit] = for {
+    s <- get(key)
+    _ <- put(key, f(s))
+  } yield ()
 }
