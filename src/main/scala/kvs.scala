@@ -34,4 +34,9 @@ object KVS {
       case Delete(key, next) => Delete(key, f(next))
     }
   }
+
+  // 3. Lifting functions - rise our ADT + companion Functor to create API using FreeMonad
+  def put(key: String, value: String): Free[KVS, Unit] = liftF(Put(key, value, ()))
+  def get(key: String): Free[KVS, String] = liftF(Get(key, identity))
+  def delete(key: String): Free[KVS, Unit] = liftF(Delete(key, ()))
 }
