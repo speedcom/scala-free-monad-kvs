@@ -1,4 +1,4 @@
-name := "sbt-deafault-project"
+name := "scala-free-monad-kvs"
 
 version := "1.0"
 
