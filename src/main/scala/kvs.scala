@@ -1,7 +1,6 @@
 
+import scalaz.Free._
 import scalaz._
-import Scalaz._
-import Free._
 
 // This example is based off the one in Runar Bjarnason's "Dead Simple Dependency Injection" talk.
 // http://www.youtube.com/watch?v=ZasXwtTRkio
@@ -21,9 +20,16 @@ import Free._
 
 // 1. ADT
 trait KVS[Next]
-case class Put[Next](key: String, value: String, next: Next) extends KVS[Next]     // <----  def put(key: String, value: String): Unit
-case class Get[Next](key: String, onResult: String => Next) extends KVS[Next]      // <----  def get(key: String): String
-case class Delete[Next](key: String, next: Next) extends KVS[Next]                 // <----  def delete(key: String): Unit
+
+case class Put[Next](key: String, value: String, next: Next) extends KVS[Next]
+
+// <----  def put(key: String, value: String): Unit
+case class Get[Next](key: String, onResult: String => Next) extends KVS[Next]
+
+// <----  def get(key: String): String
+case class Delete[Next](key: String, next: Next) extends KVS[Next]
+
+// <----  def delete(key: String): Unit
 
 object KVS {
 
@@ -38,7 +44,9 @@ object KVS {
 
   // 3. Lifting functions - rise our ADT + companion Functor to create API using FreeMonad
   def put(key: String, value: String): Free[KVS, Unit] = liftF(Put(key, value, ()))
+
   def get(key: String): Free[KVS, String] = liftF(Get(key, identity))
+
   def delete(key: String): Free[KVS, Unit] = liftF(Delete(key, ()))
 
   // 4. Composite functions
@@ -51,14 +59,30 @@ object KVS {
   type Script[A] = Free[KVS, A]
 
   val script: Script[(String, String)] = for {
-    _    <- put("key_1", "10000")
-    _    <- put("key_2", "999")
-    _    <- modify("key_1", _ + "0000")
-    _    <- delete("key_3")
+    _ <- put("key_1", "10000")
+    _ <- put("key_2", "999")
+    _ <- modify("key_1", _ + "0000")
+    _ <- delete("key_3")
     k1_v <- get("key_1")
     k2_v <- get("key_2")
-  } yield (k1_v, k2_v)
+  } yield ((k1_v, k2_v))
 
-  
+  // 6. Interpreters
+  def pureInterpreter(script: Script[(String, String)],
+                      data: Map[String, String] = Map.empty): Map[String, String] = {
+    script.resume.fold({
+      case Get(key, h) => pureInterpreter(h(data(key)), data)
+      case Put(key, value, next) => pureInterpreter(next, data + (key -> value))
+      case Delete(key, next) => pureInterpreter(next, data - key)
+    }, _ => data
+    )
+  }
 
+}
+
+object KvsApp extends App {
+
+  val data = Map("key_30" -> "1")
+  val dataAfter = KVS.pureInterpreter(KVS.script, data)
+  println(s"dataAfter: $dataAfter")
 }
