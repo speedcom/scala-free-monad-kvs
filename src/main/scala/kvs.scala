@@ -25,8 +25,9 @@ case class Put[Next](key: String, value: String, next: Next) extends KVS[Next]  
 case class Get[Next](key: String, onResult: String => Next) extends KVS[Next]      // <----  def get(key: String): String
 case class Delete[Next](key: String, next: Next) extends KVS[Next]                 // <----  def delete(key: String): Unit
 
-// 2. Functor definition
 object KVS {
+
+  // 2. Functor definition
   implicit val functorKvs = new Functor[KVS] {
     override def map[A, B](kvs: KVS[A])(f: (A) => B): KVS[B] = kvs match {
       case Put(key, value, next) => Put(key, value, f(next))
@@ -45,4 +46,19 @@ object KVS {
     s <- get(key)
     _ <- put(key, f(s))
   } yield ()
+
+  // 5. Write scripts
+  type Script[A] = Free[KVS, A]
+
+  val script: Script[(String, String)] = for {
+    _    <- put("key_1", "10000")
+    _    <- put("key_2", "999")
+    _    <- modify("key_1", _ + "0000")
+    _    <- delete("key_3")
+    k1_v <- get("key_1")
+    k2_v <- get("key_2")
+  } yield (k1_v, k2_v)
+
+  
+
 }
