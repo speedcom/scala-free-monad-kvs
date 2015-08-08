@@ -2,7 +2,7 @@
 import scalaz.Free._
 import scalaz._
 
-// This example is based off the one in Runar Bjarnason's "Dead Simple Dependency Injection" talk.
+// This example based on the one in Runar Bjarnason's "Dead Simple Dependency Injection" talk.
 // http://www.youtube.com/watch?v=ZasXwtTRkio
 
 // RECIPE
